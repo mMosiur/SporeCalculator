@@ -2,131 +2,99 @@
 
 namespace SporeCalculator;
 
-public struct BuildingCounts : IReadOnlyDictionary<BuildingType, int>
+public readonly struct BuildingCounts : IReadOnlyDictionary<BuildingType, int>
 {
-    private static readonly BuildingType[] StaticKeys = new[] { BuildingType.Empty, BuildingType.House, BuildingType.Entertainment, BuildingType.Work };
+    private static readonly BuildingType[] StaticKeys = [BuildingType.Empty, BuildingType.House, BuildingType.Entertainment, BuildingType.Factory];
+
+    private readonly int[] _counts;
 
     public BuildingCounts()
     {
+        _counts = [0, 0, 0, 0];
     }
 
     public BuildingCounts(IEnumerable<BuildingType> snapshot)
     {
+        Span<int> counts = stackalloc int[4];
         foreach (var type in snapshot)
         {
-            Increment(type);
+            ThrowIfKeyInvalid(type);
+            counts[(int)type]++;
         }
+
+        _counts = counts.ToArray();
     }
 
-    public int Empty { get; set; }
-    public int House { get; set; }
-    public int Entertainment { get; set; }
-    public int Work { get; set; }
+    public int Empty => _counts[(int)BuildingType.Empty];
+    public int House => _counts[(int)BuildingType.House];
+    public int Entertainment => _counts[(int)BuildingType.Entertainment];
+    public int Factory => _counts[(int)BuildingType.Factory];
 
+    public int Count => StaticKeys.Length;
 
-    public int Count { get; } = 4;
-    public int Total => Empty + House + Entertainment + Work;
+    private static bool IsKeyValid(BuildingType key)
+    {
+        int index = (int)key;
+        return index >= 0 && index < StaticKeys.Length;
+    }
 
     public bool ContainsKey(BuildingType key)
     {
-        return key is BuildingType.Empty or BuildingType.House or BuildingType.Entertainment or BuildingType.Work;
+        return IsKeyValid(key);
     }
 
     public bool TryGetValue(BuildingType key, out int value)
     {
-        int? val = key switch
+        if (IsKeyValid(key))
         {
-            BuildingType.Empty => Empty,
-            BuildingType.House => House,
-            BuildingType.Entertainment => Entertainment,
-            BuildingType.Work => Work,
-            _ => null
-        };
-        if (val is null)
-        {
-            value = default;
-            return false;
+            value = _counts[(int)key];
+            return true;
         }
 
-        value = val.Value;
-        return true;
+        value = default;
+        return false;
+    }
+
+    private static void ThrowIfKeyInvalid(BuildingType key)
+    {
+        if (!IsKeyValid(key))
+        {
+            throw new KeyNotFoundException($"Building type '{key}' not found");
+        }
     }
 
     public int this[BuildingType type]
     {
         get
         {
-            return type switch
-            {
-                BuildingType.Empty => Empty,
-                BuildingType.House => House,
-                BuildingType.Entertainment => Entertainment,
-                BuildingType.Work => Work,
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Invalid building type")
-            };
-        }
-        set
-        {
-            switch (type)
-            {
-                case BuildingType.Empty:
-                    Empty = value;
-                    break;
-                case BuildingType.House:
-                    House = value;
-                    break;
-                case BuildingType.Entertainment:
-                    Entertainment = value;
-                    break;
-                case BuildingType.Work:
-                    Work = value;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, "Invalid building type");
-            }
+            ThrowIfKeyInvalid(type);
+            return _counts[(int)type];
         }
     }
 
     public IEnumerable<BuildingType> Keys => StaticKeys;
 
-    public IEnumerable<int> Values => new[] { Empty, House, Entertainment, Work };
+    public IEnumerable<int> Values => _counts;
 
     public void AddTo(BuildingType type, int count)
     {
-        switch (type)
-        {
-            case BuildingType.Empty:
-                Empty += count;
-                break;
-            case BuildingType.House:
-                House += count;
-                break;
-            case BuildingType.Entertainment:
-                Entertainment += count;
-                break;
-            case BuildingType.Work:
-                Work += count;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type), type, "Invalid building type");
-        }
+        ThrowIfKeyInvalid(type);
+        _counts[(int)type] += count;
     }
 
     public void Increment(BuildingType type)
     {
-        AddTo(type, 1);
+        ThrowIfKeyInvalid(type);
+        _counts[(int)type]++;
     }
 
     public IEnumerator<KeyValuePair<BuildingType, int>> GetEnumerator()
     {
-        yield return new(BuildingType.Empty, Empty);
-        yield return new(BuildingType.House, House);
-        yield return new(BuildingType.Entertainment, Entertainment);
-        yield return new(BuildingType.Work, Work);
+        for (int i = 0; i < StaticKeys.Length; i++)
+        {
+            yield return new(StaticKeys[i], _counts[i]);
+        }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

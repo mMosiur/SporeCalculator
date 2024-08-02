@@ -21,7 +21,7 @@ void CalculateAndPrintBestSnapshots(City city)
                 0 => BuildingType.Empty,
                 1 => BuildingType.House,
                 2 => BuildingType.Entertainment,
-                3 => BuildingType.Work,
+                3 => BuildingType.Factory,
                 _ => throw new UnreachableException()
             };
             temp >>= 2;
@@ -47,40 +47,46 @@ void CalculateAndPrintBestSnapshots(City city)
         }
     }
 
-    Console.WriteLine("{0} ({1}), [{2} appeared {3}]", legalArrangements, (double)legalArrangements / totalArrangements, bestStats, bestStatSnapshots.Count);
+    Console.WriteLine("{0}, [Income {1} with Happiness {2} (Score {3}) appeared {4} times]", legalArrangements, bestStats.Income, bestStats.Happiness, bestStats.Score, bestStatSnapshots.Count);
 
     foreach (var snapshot in bestStatSnapshots)
     {
-        string snapshotString = string.Join(", ", snapshot.Select((s, i) => $"{i}:{Building.TypeToChar(s)}"));
+        string snapshotString = string.Join(", ", snapshot.Select((t, i) =>
+        {
+            string part = $"{i}:{BuildingHelper.TypeToChar(t)}";
+            return t != BuildingType.Empty ? part : new(' ', part.Length);
+        }));
         var buildingCounts = new BuildingCounts(snapshot);
-        string countsString = string.Join(", ", buildingCounts.Select(kvp => $"{Building.TypeToChar(kvp.Key)}:{kvp.Value}"));
-        Console.WriteLine($"-- {snapshotString} ({countsString})");
+        string countsString = string.Join(", ", buildingCounts.Select(kvp => $"{BuildingHelper.TypeToChar(kvp.Key)}:{kvp.Value}"));
+        Console.WriteLine($"{snapshotString} ({countsString})");
     }
 }
+
 
 // Get path to optimal snapshot
 
 // var snapshot = new[]
 // {
 //     BuildingType.House,
-//     BuildingType.Work,
+//     BuildingType.Factory,
 //     BuildingType.House,
 //     BuildingType.House,
-//     BuildingType.Work,
+//     BuildingType.Factory,
 //     BuildingType.Entertainment,
 //     BuildingType.Entertainment,
 //     BuildingType.House,
 //     BuildingType.House,
-//     BuildingType.Work,
+//     BuildingType.Factory,
 //     BuildingType.House
 // };
 //
 // city.SetSnapshot(snapshot);
 // city.PrintSummary();
 
+var cityBuilder = new CityBuilder(CityLayouts.Adamazium);
 for (int i = 0; i < 10; i++)
 {
-    var city = new City(i, i);
+    var city = cityBuilder.SetEmptyCount(i, i).Build();
     Console.WriteLine($"City with {i} missing buildings:");
     CalculateAndPrintBestSnapshots(city);
     Console.WriteLine();
