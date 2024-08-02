@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace SporeCalculator;
+namespace CityLayoutCalculator;
 
 public readonly struct BuildingCounts : IReadOnlyDictionary<BuildingType, int>
 {

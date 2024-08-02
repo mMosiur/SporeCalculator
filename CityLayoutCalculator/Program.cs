@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using SporeCalculator;
+using CityLayoutCalculator;
 
 // var city = new City();
 

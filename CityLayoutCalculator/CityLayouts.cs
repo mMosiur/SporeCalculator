@@ -1,4 +1,4 @@
-﻿namespace SporeCalculator;
+﻿namespace CityLayoutCalculator;
 
 public static class CityLayouts
 {

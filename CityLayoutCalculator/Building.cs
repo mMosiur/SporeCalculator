@@ -1,4 +1,4 @@
-﻿namespace SporeCalculator;
+﻿namespace CityLayoutCalculator;
 
 public abstract class Building(BuildingType type)
 {
